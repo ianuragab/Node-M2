@@ -3,6 +3,7 @@ import { compPass, hashPass } from "../helper/bcryptPass.js";
 import { Course } from "../model/courseSchema.js";
 import { Faculty } from "../model/facultySchema.js";
 import { State } from "country-state-city";
+import { Otp } from "../model/otpSchema.js";
 
 const otp = Math.floor(1000 + Math.random() * 9000);
 
@@ -49,12 +50,14 @@ export const studentController = {
       sendEmail(email, message, subject);
 
       const qr = await QRCode.toDataURL(firstName, lastName, email, course)
-      .then(url => {
-        console.log(url)
-      })
-      .catch(err => {
-        console.error(err)
-      })
+        .then((url) => {
+          console.log(url);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+
+      await Otp.create({ email: email, phone: phone, otp: otp });
 
       const student = await Faculty.create({
         firstName: firstName,
@@ -125,7 +128,7 @@ export const studentController = {
     const { email,firstName, lastName, phone, country, state, city, dialCode } =
       req.body;
     try {
-      const query = {$or: [{ email: email }, { phone: phone }]};
+      const query = { $or: [{ email: email }, { phone: phone }] };
       const user = await Faculty.findOne(query);
       if (user) {
         return res.status(400).json({ message: "User already exists" });

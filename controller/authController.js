@@ -14,6 +14,8 @@ const authController = {
       }
 
       await Faculty.updateOne({ email }, { $set: { isVerified: true } });
+      await Otp.deleteOne({ email: email });
+
       res.status(400).json({ message: "OTP verified" });
     } catch (error) {
       console.log(error);
@@ -33,7 +35,11 @@ const authController = {
       const message = `Your OTP for email verification is ${otp}`;
       await sendMail(email, message, subject);
 
-      await Otp.updateOne({ email: email }, { $set: { otp: otp } });
+      await Otp.updateOne(
+        { email: email },
+        { email: email, otp: otp, phone: user.phone },
+        { upsert: true }
+      );
       res.status(200).json({ message: "OTP sent successfully" });
     } catch (error) {
       console.log(error);

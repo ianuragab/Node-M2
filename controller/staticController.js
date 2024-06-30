@@ -23,14 +23,14 @@ export const staticController = {
 
   getFaqs: async (req, res) => {
     try {
-      const data = await Static.findOne();
-      if (!data.faq) {
+      const data = await Static.findOne({ faq: { $exists: true } });
+      if (!data) {
         return res.status(404).json({ message: "No Faqs found" });
       }
 
       return res.status(200).json({
         message: "Get faq route",
-        contactUs: faq.faq,
+        faq: data,
       });
     } catch (error) {
       return res
@@ -41,14 +41,16 @@ export const staticController = {
 
   getPrivacyPolicy: async (req, res) => {
     try {
-      const privacyPolicy = await Static.findOne();
+      const privacyPolicy = await Static.findOne({
+        static: { $elemMatch: { type: "Privacy Policy" } },
+      });
       if (!privacyPolicy) {
         return res.status(404).json({ message: "No privacy policy found" });
       }
 
       return res.status(200).json({
         message: "Get privacy policy route",
-        privacyPolicy: privacyPolicy.privacyPolicy,
+        privacyPolicy: privacyPolicy,
       });
     } catch (error) {
       return res
@@ -59,11 +61,10 @@ export const staticController = {
 
   getTermsAndConditions: async (req, res) => {
     try {
-      const termsAndConditions = await Static.findOne(
-        {},
-        { termsAndConditions: 1, _id: 0 }
-      );
-      if (!termsAndConditions) {
+      const data = await Static.findOne({
+        static: { $elemMatch: { type: "Terms & Conditions" } },
+      });
+      if (!data) {
         return res
           .status(404)
           .json({ message: "No terms and conditions found" });
@@ -71,7 +72,7 @@ export const staticController = {
 
       return res.status(200).json({
         message: "Get terms and conditions route",
-        termsAndConditions: termsAndConditions.termsAndConditions,
+        termsAndConditions: data,
       });
     } catch (error) {
       return res.status(500).json({
@@ -81,20 +82,21 @@ export const staticController = {
   },
 
   addAboutUs: async (req, res) => {
+    const { type, heading, content } = req.body;
     try {
-      const data = await Static.findOne();
+      const data = await Static.findOne({
+        static: { $elemMatch: { type: "About Us" } },
+      });
 
-      if (!data.aboutUs) {
+      if (!data) {
         return res.status(404).json({ message: "About us not found" });
       }
 
-      data.aboutUs.push(req.body.aboutUs);
-
-      await Static.updateOne({}, { aboutUs: data.aboutUs });
+      const result = await Static.create({}, { type, heading, content });
 
       return res
         .status(200)
-        .json({ message: "New About us added", Result: data.aboutUs });
+        .json({ message: "New About us added", Result: result });
     } catch (error) {
       return res
         .status(500)
@@ -104,42 +106,39 @@ export const staticController = {
 
   addFaq: async (req, res) => {
     try {
-      const data = await Static.findOne();
+      const data = await Static.findOne({ faq: { $exists: true } });
 
-      if (!data.faq) {
+      if (!data) {
         return res.status(404).json({ message: "Faqs not found" });
       }
 
-      data.faq.push(req.body.faq);
+      data.push(req.body.faq);
 
-      await Static.updateOne({}, { faq: data.faq });
+      await Static.updateOne({ faq }, { faq: data });
 
-      return res
-        .status(200)
-        .json({ message: "New Faq added", Result: data.faq });
+      return res.status(200).json({ message: "New Faq added", Result: data });
     } catch (error) {
       return res.status(500).json({ message: "Error in adding Faq", error });
     }
   },
 
   addPrivacyPolicy: async (req, res) => {
+    const { type, heading, content } = req.body;
     try {
-      const data = await Static.findOne();
+      const data = await Static.findOne({
+        static: { $elemMatch: { type: "privacy Policy" } },
+      });
 
-      if (!data.privacyPolicy) {
+      if (!data) {
         return res.status(404).json({ message: "Privacy policy not found" });
       }
 
-      data.privacyPolicy.push(req.body.privacyPolicy);
+      await Static.create({}, { type, heading, content });
 
-      await Static.updateOne({}, { privacyPolicy: data.privacyPolicy });
-
-      return res
-        .status(200)
-        .json({
-          message: "New Privacy policy added",
-          Result: data.privacyPolicy,
-        });
+      return res.status(200).json({
+        message: "New Privacy policy added",
+        Result: data.privacyPolicy,
+      });
     } catch (error) {
       return res
         .status(500)
@@ -148,28 +147,24 @@ export const staticController = {
   },
 
   addTermsAndConditions: async (req, res) => {
+    const { type, heading, content } = req.body;
     try {
-      const data = await Static.findOne();
+      const data = await Static.findOne({
+        static: { $elemMatch: { type: "Terms & Conditions" } },
+      });
 
-      if (!data.termsAndConditions) {
+      if (!data) {
         return res
           .status(404)
           .json({ message: "Terms and conditions not found" });
       }
 
-      data.termsAndConditions.push(req.body.termsAndConditions);
+      await Static.create({}, { type, heading, content });
 
-      await Static.updateOne(
-        {},
-        { termsAndConditions: data.termsAndConditions }
-      );
-
-      return res
-        .status(200)
-        .json({
-          message: "New Terms and conditions added",
-          Result: data.termsAndConditions,
-        });
+      return res.status(200).json({
+        message: "New Terms and conditions added",
+        Result: data.termsAndConditions,
+      });
     } catch (error) {
       return res
         .status(500)
