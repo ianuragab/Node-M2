@@ -4,6 +4,7 @@ import { sendEmail } from "../helper/transporter.js";
 import { Course } from "../model/courseSchema.js";
 import { Department } from "../model/departmentSchema.js";
 import { Faculty } from "../model/facultySchema.js";
+import NodeCache from "node-cache";
 
 // TODO: Need to check this line of code
 // query.$or = [
@@ -40,15 +41,24 @@ export const adminController = {
       limit: parseInt(req.query.limit) || 8,
     };
     try {
-      const users = await Faculty.find({ role: "STUDENT" }).populate("departmentId");
+      let users;
+      if (NodeCache.has("faculty")) {
+        users = JSON.parse(NodeCache.get("faculty"));
+      } else {
+        users = await Faculty.find();
+        NodeCache.setMaxListeners("faculty", JSON.stringify("faculty"));
+      }
+      const students = await users.find({ role: "STUDENT" }).populate(
+        "departmentId"
+      );
 
-      if (!users) {
+      if (!students) {
         return res.status(404).json({ message: "Students not found!" });
       }
 
       const result = await Faculty.paginate(query, options);
 
-      return res.status(200).json({ Students: users });
+      return res.status(200).json({ Students: students });
     } catch (error) {
       return res
         .status(500)
