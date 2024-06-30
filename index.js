@@ -7,6 +7,7 @@ import facultyRouter from "./router/facultyRoutes.js";
 import { verifyAdmin } from "./middleware/verifyFaculty.js";
 import studentRouter from "./router/studentRoutes.js";
 import { defaultStatic } from "./model/staticSchema.js";
+import authStatic from "./router/authStaticRoutes.js";
 
 const app = Express();
 
@@ -19,6 +20,7 @@ app.use(Express.json());
 app.use("/api/admin", verifyAdmin, adminRouter);
 app.use("/api/faculty", facultyRouter);
 app.use("/api/student", studentRouter);
+app.use("api/v1/", authStatic);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on  ${process.env.PORT || 5000}`);

@@ -1,16 +1,18 @@
-
+import { Static } from "../model/staticSchema.js";
 
 export const staticController = {
   getAboutUs: async (req, res) => {
     try {
-      const data = await Static.findOne();
-      if (!data.aboutUs) {
+      const data = await Static.findOne({
+        static: { $elemMatch: { type: "About Us" } },
+      });
+      if (!data) {
         return res.status(404).json({ message: "No about us found" });
       }
 
       return res.status(200).json({
         message: "Get About us route",
-        aboutUs: aboutUs.aboutUs,
+        aboutUs: data,
       });
     } catch (error) {
       return res
@@ -134,7 +136,10 @@ export const staticController = {
 
       return res
         .status(200)
-        .json({ message: "New Privacy policy added", Result: data.privacyPolicy });
+        .json({
+          message: "New Privacy policy added",
+          Result: data.privacyPolicy,
+        });
     } catch (error) {
       return res
         .status(500)
@@ -147,16 +152,24 @@ export const staticController = {
       const data = await Static.findOne();
 
       if (!data.termsAndConditions) {
-        return res.status(404).json({ message: "Terms and conditions not found" });
+        return res
+          .status(404)
+          .json({ message: "Terms and conditions not found" });
       }
 
       data.termsAndConditions.push(req.body.termsAndConditions);
 
-      await Static.updateOne({}, { termsAndConditions: data.termsAndConditions });
+      await Static.updateOne(
+        {},
+        { termsAndConditions: data.termsAndConditions }
+      );
 
       return res
         .status(200)
-        .json({ message: "New Terms and conditions added", Result: data.termsAndConditions });
+        .json({
+          message: "New Terms and conditions added",
+          Result: data.termsAndConditions,
+        });
     } catch (error) {
       return res
         .status(500)
